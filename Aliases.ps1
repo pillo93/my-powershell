@@ -2,7 +2,8 @@ function g.s
 {
     git status @Args
 }
-function g.l {
+function g.l
+{
     git log
 }
 function g.ck
@@ -74,7 +75,10 @@ function cd.rspec
 {
     Set-Location $HOME/git/rspec
 }
-
+function touch
+{
+    New-Item -Type File -Path $args[0]
+}
 Set-Alias g.d "git diff"
 Set-Alias grep "Select-String"
 
