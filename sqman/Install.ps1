@@ -86,3 +86,20 @@ function Expand-AndRenameZip {
 
     Remove-Item -Path $ZipPath
 }
+
+function sq.installed {
+    param (
+        [string]$Version = ""
+    )
+
+    $installsFolder = "$env:USERPROFILE\.sqman"
+
+    if (-not (Test-Path $installsFolder)) {
+        return @()
+    }
+
+    return Get-ChildItem -Path $installsFolder -Directory |
+            Where-Object { $_.Name -like "$Version*" } |
+            Sort-Object Name |
+            Select-Object -ExpandProperty Name
+}
