@@ -2,6 +2,9 @@ function g.s
 {
     git status @Args
 }
+function g.aa {
+    git add .
+}
 function g.l
 {
     git log
@@ -46,21 +49,25 @@ function g.fa
 {
     git fetch --all
 }
-function g.rst()
+function g.rst
 {
     git reset --hard HEAD
 }
-function g.curr()
+function g.curr
 {
     git branch --show-current
 }
-function g.psn()
+function g.psn
 {
     git push -u origin $( g.curr )
 }
-function g.psf()
+function g.psf
 {
     git push --force-with-lease
+}
+function g.d
+{
+    git diff
 }
 
 function cd.sj
@@ -79,6 +86,48 @@ function touch
 {
     New-Item -Type File -Path $args[0]
 }
-Set-Alias g.d "git diff"
-Set-Alias grep "Select-String"
+function grep {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]$Pattern,
+
+        [Parameter(Position = 1)]
+        [string[]]$Path = @("-"),
+
+        [Parameter(ValueFromPipeline = $true)]
+        [string]$InputObject,
+
+        [switch]$ic,
+        [switch]$n
+    )
+
+    begin {
+        $slsParams = @{
+            Pattern       = $Pattern
+            CaseSensitive = -not $ic.IsPresent
+            NotMatch      = $n.IsPresent
+        }
+        $inputBuffer = @()
+    }
+
+    process {
+        if ($Path -eq "-") {
+            if ($InputObject) {
+                $inputBuffer += $InputObject
+            }
+        }
+    }
+
+    end {
+        if ($Path -eq "-") {
+            $inputBuffer | Select-String @slsParams
+        } else {
+            $slsParams.Path = $Path
+            Select-String @slsParams
+        }
+    }
+}
+
+
 
