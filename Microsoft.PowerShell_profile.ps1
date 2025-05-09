@@ -4,8 +4,14 @@ if (-not ( Get-Service -Name "ssh-agent" | Where-Object { $_.Status -eq "Running
 }
 ssh-add C:\Users\leonardo.pilastri\.ssh\id_rsa
 
-Import-Module posh-git
-Add-PoshGitToProfile -AllHosts
+try {
+    $null = gh auth status --hostname github.com
+    Write-Host "✅ Already authenticated with GitHub CLI."
+} catch {
+    Write-Host "❌ Not authenticated. Logging in..."
+    $GITHUB_TOKEN = Get-Content -Path "${HOME}\tokens\gh_access_token" -Raw
+    $GITHUB_TOKEN | gh auth login --with-token
+}
 
 $initialPath = $env:PATH
 $env:MAVEN_HOME = ""
@@ -24,3 +30,5 @@ function Update-Path()
 . "${HOME}\git\my-powershell\sqman\Discover.ps1"
 . "${HOME}\git\my-powershell\sqman\Install.ps1"
 . "${HOME}\git\my-powershell\sqman\Run.ps1"
+. "${HOME}\git\my-powershell\mendy\Mend.ps1"
+. "${HOME}\git\my-powershell\sqman\Analyze.ps1"
