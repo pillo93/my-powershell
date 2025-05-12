@@ -21,6 +21,14 @@ function Update-Path()
     $env:PATH = "$env:JAVA_HOME\bin;" + "$env:MAVEN_HOME\bin;" + $initialPath
 }
 
+function prompt {
+    $path = (Get-Location).Path
+    $parts = $path -split '\\'
+    $short = ($parts[0..($parts.Length - 2)] | ForEach-Object { $_[0] }) -join '\'
+    $short += "\" + $parts[-1]
+    "$short> "
+}
+
 . "${HOME}\git\my-powershell\Aliases.ps1"
 . "${HOME}\git\my-powershell\UseJava.ps1"
 . "${HOME}\git\my-powershell\GetJava.ps1"

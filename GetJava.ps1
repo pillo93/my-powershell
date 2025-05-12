@@ -9,9 +9,23 @@ function getjava
         return
     }
 
-    $ghrepo = "/repos/adoptium/temurin${javaVersion}-binaries/releases/latest"
-    $latest = gh api -H "Accept: application/vnd.github+json" $ghrepo | ConvertFrom-Json
-    $javaFullVersion = $latest.tag_name -replace 'jdk-', ''
+    $ghrepo = "/repos/adoptium/temurin${javaVersion}-binaries/releases"
+    $releases = gh api -H "Accept: application/vnd.github+json" $ghrepo | ConvertFrom-Json
+    $tags = $releases | Select-Object -ExpandProperty tag_name
+
+    # Display numbered list
+    for ($i = 0; $i -lt $tags.Count; $i++) {
+        Write-Host "$($i + 1): $($tags[$i])"
+    }
+    $selection = Read-Host "Enter the number of the release you want to select"
+    if ($selection -match '^\d+$' -and [int]$selection -ge 1 -and [int]$selection -le $tags.Count) {
+        $chosenTag = $tags[$selection - 1]
+        Write-Host "You selected: $chosenTag"
+    } else {
+        Write-Host "Invalid selection. Please run the script again and choose a valid number."
+    }
+
+    $javaFullVersion = $chosenTag -replace 'jdk-', ''
     Write-Output "Installing Java ${javaFullVersion}"
 
     $javaUriVersion = $javaFullVersion -replace '\+', '%2B'
@@ -26,11 +40,12 @@ function getjava
     Write-Output "Download from '$binaryUrl' into '$zipPath'"
     Invoke-WebRequest -Uri $binaryUrl -OutFile $zipPath
     Expand-Archive -Path $zipPath -DestinationPath $javaInstalls
-    $jdkFolder = Get-ChildItem -Path $javaInstalls -Directory | Where-Object Name -EQ $latest.tag_name
+    $jdkFolder = Get-ChildItem -Path $javaInstalls -Directory | Where-Object Name -EQ $chosenTag
     if ($jdkFolder)
     {
         # Final name will be for instance: $HOME/java/23
-        Rename-Item -Path $jdkFolder.FullName -NewName $javaVersion
+        $major = $chosenTag -replace '^jdk-(\d+)\+.*$', '$1'
+        Rename-Item -Path $jdkFolder.FullName -NewName $major
     }
     Remove-Item -Path $zipPath
 }
