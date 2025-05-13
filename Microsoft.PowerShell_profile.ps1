@@ -26,7 +26,10 @@ function prompt {
     $parts = $path -split '\\'
     $short = ($parts[0..($parts.Length - 2)] | ForEach-Object { $_[0] }) -join '\'
     $short += "\" + $parts[-1]
-    "$short> "
+    # Get Git status (if any)
+    $git = Write-VcsStatus
+    # Return the full prompt string
+    "$short $git> "
 }
 
 . "${HOME}\git\my-powershell\Aliases.ps1"
