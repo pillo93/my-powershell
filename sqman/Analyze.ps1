@@ -1,3 +1,28 @@
+function sq.mvnanalysis {
+    param (
+        [string]$ProjectKey = "my-project",
+        [string]$ProjectName = "My Project",
+        [string]$ProjectVersion = "1.0",
+        [string]$SonarHostUrl = "http://localhost:9000",
+        [string]$SonarToken = $env:SONAR_TOKEN
+    )
+
+    if (-not $SonarToken) {
+        Write-Output "SonarQube token not provided. Set the SONAR_TOKEN environment variable or pass it explicitly."
+        return
+    }
+
+    $ssargs = @(
+        "-Dsonar.projectKey=$ProjectKey"
+        "-Dsonar.projectName=$ProjectName"
+        "-Dsonar.projectVersion=$ProjectVersion"
+        "-Dsonar.host.url=$SonarHostUrl"
+        "-Dsonar.token=$SonarToken"
+    )
+
+    mvn sonar:sonar @ssargs
+}
+
 function sq.analyze {
     param (
         [string]$ProjectKey = "my-project",

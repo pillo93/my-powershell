@@ -32,6 +32,7 @@ function prompt {
     "$short $git> "
 }
 
+. "${HOME}\git\my-powershell\utils\env.ps1"
 . "${HOME}\git\my-powershell\Aliases.ps1"
 . "${HOME}\git\my-powershell\UseJava.ps1"
 . "${HOME}\git\my-powershell\GetJava.ps1"

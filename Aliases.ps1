@@ -7,7 +7,11 @@ function g.aa {
 }
 function g.l
 {
-    git log
+    git log $args
+}
+function g.lg
+{
+    git log --oneline --graph
 }
 function g.ck
 {
@@ -128,6 +132,22 @@ function grep {
         }
     }
 }
+function sha1 {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Path
+    )
+    Get-FileHash -Path $Path -Algorithm SHA1 | Select-Object -ExpandProperty Hash
+}
+Add-Type -AssemblyName "System.IO.Compression.FileSystem"
+function jar.classes {
+    param([string]$JarPath)
 
-
-
+    $jar = [System.IO.Compression.ZipFile]::OpenRead($JarPath)
+    $classes = $jar.Entries | Where-Object { $_.FullName -like "*.class" } | ForEach-Object {
+        $_.FullName.Replace("/", ".").TrimEnd(".class")
+    } | Sort-Object
+    $jar.Dispose()
+    $classes
+}
