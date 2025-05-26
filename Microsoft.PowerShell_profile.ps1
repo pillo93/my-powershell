@@ -44,3 +44,4 @@ function prompt {
 . "${HOME}\git\my-powershell\sqman\Run.ps1"
 . "${HOME}\git\my-powershell\mendy\Mend.ps1"
 . "${HOME}\git\my-powershell\sqman\Analyze.ps1"
+. "${HOME}\git\my-powershell\curl\repox.ps1"

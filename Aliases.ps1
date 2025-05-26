@@ -73,7 +73,7 @@ function g.d
 {
     git diff
 }
-
+function cd.se { Set-Location $HOME/git/sonar-java-symbolic-execution }
 function cd.sj
 {
     Set-Location $HOME/git/sonar-java
@@ -98,6 +98,10 @@ function grep {
 
         [Parameter(Position = 1)]
         [string[]]$Path = @("-"),
+        [Parameter()]
+        [int]$B = 0,
+        [Parameter()]
+        [int]$A = 0,
 
         [Parameter(ValueFromPipeline = $true)]
         [string]$InputObject,
@@ -111,6 +115,7 @@ function grep {
             Pattern       = $Pattern
             CaseSensitive = -not $ic.IsPresent
             NotMatch      = $n.IsPresent
+            Context       = @($B, $A)
         }
         $inputBuffer = @()
     }
