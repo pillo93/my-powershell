@@ -15,4 +15,4 @@ function usejava {
     }
 }
 
- usejava 23
+ usejava 17
