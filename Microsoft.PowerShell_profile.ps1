@@ -13,6 +13,8 @@ try {
     $GITHUB_TOKEN | gh auth login --with-token
 }
 
+$env:ARTIFACTORY_PRIVATE_PASSWORD = Get-Content -Path "${HOME}\tokens\repox_token" -Raw
+
 $initialPath = $env:PATH
 $env:MAVEN_HOME = ""
 
