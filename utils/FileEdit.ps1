@@ -1,31 +1,71 @@
 function crlf2lf {
     param (
-        [Parameter(Mandatory=$true)]
-        [string]$FilePath
+    # Single mandatory parameter for the file or directory path
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$Path
     )
 
-    # Resolve the path to an absolute path for robust checking and operations,
-    # though it's often not strictly necessary as PowerShell handles it.
-    # This ensures consistency, especially when dealing with PowerShell's location stack.
-    $absolutePath = (Get-Item $FilePath).FullName
+    # --- Internal Conversion Logic (Same as before) ---
+    function Convert-File {
+        param([string]$Path)
 
-    if (-not (Test-Path $absolutePath)) {
-        Write-Error "File not found: $absolutePath"
+        $absolutePath = (Get-Item $Path).FullName
+
+        try {
+            # Use [System.IO.File]::ReadAllText for reading
+            # Note: Default ReadAllText uses UTF-8 encoding unless a BOM is detected.
+            $content = [System.IO.File]::ReadAllText($absolutePath)
+
+            # Replace CRLF (`r`n) with LF (`n`)
+            $newContent = $content -replace "`r`n", "`n"
+
+            # Check if content changed before writing back
+            if ($content -ne $newContent) {
+                # Use [System.IO.File]::WriteAllText for writing (UTF8 without BOM for Unix compatibility)
+                # The $false in the UTF8Encoding constructor prevents the BOM.
+                [System.IO.File]::WriteAllText($absolutePath, $newContent, (New-Object System.Text.UTF8Encoding($false)))
+                Write-Host "Converted '$absolutePath' from CRLF to LF successfully." -ForegroundColor Green
+            } else {
+                Write-Host "Skipped '$absolutePath'. Already using LF or no changes needed." -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Error "An error occurred converting '$absolutePath': $($_.Exception.Message)"
+        }
+    }
+    # ---------------------------------
+
+    # --- Main Execution Logic ---
+
+    # 1. Check if the path exists
+    if (-not (Test-Path $Path)) {
+        Write-Error "Path not found: $Path"
         return
     }
 
-    try {
-        # Read the content as a single string to ensure correct replacement of CRLF
-        $content = [System.IO.File]::ReadAllText($absolutePath)
+    # 2. Determine if it's a file or directory
+    if (Test-Path $Path -PathType Leaf) {
+        # It's a file, convert it directly
+        Write-Host "Processing single file: $Path"
+        Convert-File -Path $Path
 
-        # Replace CRLF (`r`n) with LF (`n`)
-        $newContent = $content -replace "`r`n", "`n"
+    } elseif (Test-Path $Path -PathType Container) {
+        # It's a directory, recursively find and convert all files
+        Write-Host "Processing directory recursively: $Path"
 
-        # Write the modified content back to the file
-        [System.IO.File]::WriteAllText($absolutePath, $newContent, (New-Object System.Text.UTF8Encoding($false)))
+        # Get all files recursively (-File ensures only files are returned, -Recurse goes into subdirectories)
+        $files = Get-ChildItem -Path $Path -File -Recurse -ErrorAction Stop
 
-        Write-Host "Converted '$absolutePath' from CRLF to LF successfully."
-    } catch {
-        Write-Error "An error occurred converting '$absolutePath': $($_.Exception.Message)"
+        if ($files.Count -eq 0) {
+            Write-Host "No files found recursively in '$Path'." -ForegroundColor Yellow
+            return
+        }
+
+        foreach ($file in $files) {
+            Convert-File -Path $file.FullName
+        }
+
+    } else {
+        # Handle other types of paths (e.g., symlinks, drives without leaf/container type)
+        Write-Error "The specified path '$Path' is neither a file nor a directory."
     }
 }

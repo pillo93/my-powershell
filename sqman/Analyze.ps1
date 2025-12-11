@@ -1,13 +1,16 @@
-function sq.mvnanalysis {
+function sq.mvnanalysis
+{
     param (
         [string]$ProjectKey = "my-project",
         [string]$ProjectName = "My Project",
         [string]$ProjectVersion = "1.0",
         [string]$SonarHostUrl = "http://localhost:9000",
-        [string]$SonarToken = $env:SONAR_TOKEN
+        [string]$SonarToken = $env:SONAR_TOKEN,
+        [bool]$Debug = $false
     )
 
-    if (-not $SonarToken) {
+    if (-not $SonarToken)
+    {
         Write-Output "SonarQube token not provided. Set the SONAR_TOKEN environment variable or pass it explicitly."
         return
     }
@@ -20,10 +23,19 @@ function sq.mvnanalysis {
         "-Dsonar.token=$SonarToken"
     )
 
-    mvn sonar:sonar @ssargs
+    if ($Debug)
+    {
+        mvnDebug sonar:sonar @ssargs
+    }
+    else
+    {
+        mvn sonar:sonar @ssargs
+    }
+
 }
 
-function sq.analyze {
+function sq.analyze
+{
     param (
         [string]$ProjectKey = "my-project",
         [string]$ProjectName = "My Project",
@@ -32,14 +44,16 @@ function sq.analyze {
         [string]$SonarToken = $env:SONAR_TOKEN
     )
 
-    if (-not $SonarToken) {
+    if (-not $SonarToken)
+    {
         Write-Output "SonarQube token not provided. Set the SONAR_TOKEN environment variable or pass it explicitly."
         return
     }
 
     # Check if sonar-scanner is available
     $scanner = Get-Command "sonar-scanner" -ErrorAction SilentlyContinue
-    if (-not $scanner) {
+    if (-not $scanner)
+    {
         Write-Output "sonar-scanner is not installed or not in PATH."
         Write-Output "To install sonar-scanner run: sq.install.scannercli"
         return
@@ -57,7 +71,8 @@ function sq.analyze {
     sonar-scanner @ssargs
 }
 
-function sq.install.scannercli {
+function sq.install.scannercli
+{
     param (
         [string]$Version = "5.0.1.3006",
         [string]$InstallPath = "$env:ProgramFiles\sonar-scanner"
@@ -66,7 +81,8 @@ function sq.install.scannercli {
     $url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$Version-windows.zip"
     $zipFile = "$env:TEMP\sonar-scanner.zip"
 
-    if (Test-Path $InstallPath) {
+    if (Test-Path $InstallPath)
+    {
         Write-Host "SonarScanner already installed at $InstallPath"
         return
     }
@@ -79,14 +95,16 @@ function sq.install.scannercli {
 
     # Adjust path if necessary (due to nested folder)
     $scannerSubDir = Get-ChildItem -Path $InstallPath | Where-Object { $_.PSIsContainer } | Select-Object -First 1
-    if ($scannerSubDir -and $scannerSubDir.Name -ne ".") {
-        Move-Item "$InstallPath\$($scannerSubDir.Name)\*" $InstallPath -Force
-        Remove-Item "$InstallPath\$($scannerSubDir.Name)" -Recurse -Force
+    if ($scannerSubDir -and $scannerSubDir.Name -ne ".")
+    {
+        Move-Item "$InstallPath\$( $scannerSubDir.Name )\*" $InstallPath -Force
+        Remove-Item "$InstallPath\$( $scannerSubDir.Name )" -Recurse -Force
     }
 
     Write-Host "Adding SonarScanner to PATH..."
     $envPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::Machine)
-    if ($envPath -notlike "*$InstallPath\bin*") {
+    if ($envPath -notlike "*$InstallPath\bin*")
+    {
         [System.Environment]::SetEnvironmentVariable(
                 "Path",
                 "$envPath;$InstallPath\bin",
